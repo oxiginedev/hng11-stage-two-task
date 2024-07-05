@@ -9,11 +9,23 @@ import (
 	"github.com/oxiginedev/hng11-stage-two-task/pkg/models"
 )
 
-func (s *sqlstore) CreateOrganisation(ctx context.Context, o *models.Organisation) error {
-	query := s.Rebind(
-		"INSERT INTO organizations(id, name, description, created_at, updated_at) VALUES(?, ?, ?, ?, ?)")
+const (
+	createOrganisation = `
+	INSERT INTO organisations(id, name, description, created_at, updated_at)
+	VALUES (?, ?, ?, ?, ?)
+	`
+)
 
-	result, err := s.ExecContext(ctx, query, o.ID, o.Name, o.CreatedAt, o.UpdatedAt)
+func (s *sqlstore) CreateOrganisation(ctx context.Context, o *models.Organisation) error {
+	query := s.Rebind(createOrganisation)
+
+	result, err := s.ExecContext(ctx, query,
+		o.ID,
+		o.Name,
+		o.Description,
+		o.CreatedAt,
+		o.UpdatedAt,
+	)
 	if err != nil {
 		return err
 	}

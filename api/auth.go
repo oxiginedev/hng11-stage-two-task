@@ -7,31 +7,36 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/oklog/ulid/v2"
 	"github.com/oxiginedev/hng11-stage-two-task/pkg/datastore"
 	"github.com/oxiginedev/hng11-stage-two-task/pkg/jwt"
 	"github.com/oxiginedev/hng11-stage-two-task/pkg/models"
 	"github.com/oxiginedev/hng11-stage-two-task/types"
 )
 
-type registerPayload struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
+type RegisterPayload struct {
+	FirstName string `json:"firstName" validate:"required"`
+	LastName  string `json:"lastName" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required"`
+	Phone     string `json:"phone" validate:"required,numeric"`
 }
 
 // HandleRegister register a new user
 func (a *API) HandleRegister(c echo.Context) error {
-	var p registerPayload
+	var p RegisterPayload
 
 	err := c.Bind(&p)
 	if err != nil {
 		return err
 	}
 
-	// validate user
+	if err := c.Validate(p); err != nil {
+		return err
+	}
+
 	user := &models.User{
+		ID:        ulid.Make().String(),
 		FirstName: p.FirstName,
 		LastName:  p.LastName,
 		Email:     p.Email,
@@ -53,14 +58,27 @@ func (a *API) HandleRegister(c echo.Context) error {
 	}
 
 	og := &models.Organisation{
-		ID:          "",
+		ID:          ulid.Make().String(),
 		Name:        fmt.Sprintf("%s's Organisation", user.FirstName),
-		Description: "Personal organisation",
+		Description: "This is an organisation",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
 	err = a.database.CreateOrganisation(c.Request().Context(), og)
+	if err != nil {
+		return err
+	}
+
+	ogu := &models.OrganisationUser{
+		ID:             ulid.Make().String(),
+		OrganisationID: og.ID,
+		UserID:         user.ID,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+
+	err = a.database.CreateOrganisationUser(c.Request().Context(), ogu)
 	if err != nil {
 		return err
 	}
@@ -82,24 +100,28 @@ func (a *API) HandleRegister(c echo.Context) error {
 	return c.JSON(http.StatusCreated, data)
 }
 
-type loginPayload struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type LoginPayload struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 // HandleLogin authenticates a user
 func (a *API) HandleLogin(c echo.Context) error {
-	var p loginPayload
+	var p LoginPayload
 
 	err := c.Bind(&p)
 	if err != nil {
 		return err
 	}
 
+	if err := c.Validate(p); err != nil {
+		return err
+	}
+
 	user, err := a.database.FetchUserByEmail(c.Request().Context(), p.Email)
 	if err != nil {
 		if errors.Is(err, datastore.ErrRecordNotFound) {
-			return &APIError{StatusCode: http.StatusUnauthorized, Message: "Authentication failed"}
+			return newAPIError(http.StatusUnauthorized, "Authentication failed")
 		}
 
 		return err
@@ -111,7 +133,7 @@ func (a *API) HandleLogin(c echo.Context) error {
 	}
 
 	if !ok {
-		return &APIError{StatusCode: http.StatusUnauthorized, Message: "Authentication failed"}
+		return newAPIError(http.StatusUnauthorized, "Authentication failed")
 	}
 
 	accessToken, err := jwt.GenerateAccessToken(a.config.JWT.Secret, user, 1800)

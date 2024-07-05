@@ -14,7 +14,16 @@ func (s *sqlstore) CreateUser(ctx context.Context, u *models.User) error {
 	var query = s.Rebind(
 		"INSERT INTO users(first_name, last_name, email, phone, password) VALUES(?, ?, ?, ?, ?)")
 
-	result, err := s.ExecContext(ctx, query, u.FirstName, u.LastName, u.Email, u.Phone, u.Password)
+	result, err := s.ExecContext(ctx, query,
+		u.ID,
+		u.FirstName,
+		u.LastName,
+		u.Email,
+		u.Phone,
+		u.Password,
+		u.CreatedAt,
+		u.UpdatedAt,
+	)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate") {
 			return datastore.ErrDuplicate

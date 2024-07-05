@@ -23,6 +23,11 @@ type Datastore interface {
 	CreateOrganisation(context.Context, *models.Organisation) error
 	FetchOrganisationByID(context.Context, string) (*models.Organisation, error)
 
+	// organisation_user
+	CreateOrganisationUser(context.Context, *models.OrganisationUser) error
+	FetchUserOrganisations(context.Context, string) ([]*models.Organisation, error)
+	FetchOrganisationUserByUserID(ctx context.Context, userID, orgID string) (*models.OrganisationUser, error)
+
 	AutoMigrate() error
 	Close() error
 }
