@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS users(
 
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phone VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +31,9 @@ CREATE TABLE IF NOT EXISTS organisation_user(
     user_id CHAR(26) NOT NULL REFERENCES users (id),
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(organisation_id, user_id)
 );
 
 -- +migrate Down

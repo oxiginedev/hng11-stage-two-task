@@ -26,7 +26,7 @@ func (a *API) HandleCreateOrganisationUser(c echo.Context) error {
 		return err
 	}
 
-	user := GetAuthUserFromContext(c.Request().Context())
+	user := GetAuthUserFromContext(c)
 	orgID := c.Param("orgId")
 
 	_, err := a.database.FetchOrganisationUserByUserID(

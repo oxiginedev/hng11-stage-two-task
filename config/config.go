@@ -1,9 +1,12 @@
 package config
 
 import (
+	"math/rand"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Configuration struct {
@@ -15,11 +18,6 @@ type Configuration struct {
 type DatabaseConfiguration struct {
 	Driver   string
 	DSN      string
-	Host     string
-	Port     uint16
-	Username string
-	Password string
-	Database string
 }
 
 type JWTConfiguration struct {
@@ -27,31 +25,44 @@ type JWTConfiguration struct {
 	Expiry int64
 }
 
-func LoadConfig() *Configuration {
-	godotenv.Load()
+func loadEnvironment(f string) error {
+	var err error
+	if len(strings.TrimSpace(f)) != 0 {
+		err = godotenv.Overload(f)
+	} else {
+		err = godotenv.Load()
 
-	return &Configuration{
-		Port: env("PORT", 9000).(uint16),
-		DB: DatabaseConfiguration{
-			Driver:   env("DB_DRIVER", "postgres").(string),
-			DSN:      env("DB_DSN", "").(string),
-			Host:     env("DB_HOST", "localhost").(string),
-			Port:     env("DB_PORT", 5432).(uint16),
-			Username: env("DB_USERNAME", "root").(string),
-			Password: env("DB_PASSWORD", "").(string),
-			Database: env("DB_DATABASE", "").(string),
-		},
-		JWT: JWTConfiguration{
-			Secret: env("JWT_SECRET", "").(string),
-			Expiry: env("JWT_EXPIRY", 3600).(int64),
-		},
+		if os.IsNotExist(err) {
+			return nil
+		}
 	}
+
+	return err
 }
 
-func env(key string, fallback any) any {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
+func Load(f string) (*Configuration, error) {
+	if err := loadEnvironment(f); err != nil {
+		return nil, err
 	}
 
-	return fallback
+	config := new(Configuration)
+
+	if err := envconfig.Process("", config); err != nil {
+		return nil, err
+	}
+
+	if config.JWT.Secret == "" {
+		config.JWT.Secret = randomString(32)
+	}
+
+	return config, nil
+}
+
+func randomString(len int) string {
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		bytes[i] = byte(65 + rand.Intn(25)) //A=65 and Z = 65+25
+	}
+
+	return string(bytes)
 }

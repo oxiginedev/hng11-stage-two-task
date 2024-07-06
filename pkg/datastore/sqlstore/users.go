@@ -10,11 +10,13 @@ import (
 	"github.com/oxiginedev/hng11-stage-two-task/pkg/models"
 )
 
-func (s *sqlstore) CreateUser(ctx context.Context, u *models.User) error {
-	var query = s.Rebind(
-		"INSERT INTO users(first_name, last_name, email, phone, password) VALUES(?, ?, ?, ?, ?)")
+const createUser = `
+INSERT INTO users(id, first_name, last_name, email, phone, password, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`
 
-	result, err := s.ExecContext(ctx, query,
+func (s *sqlstore) CreateUser(ctx context.Context, u *models.User) error {
+	result, err := s.ExecContext(ctx, s.Rebind(createUser),
 		u.ID,
 		u.FirstName,
 		u.LastName,

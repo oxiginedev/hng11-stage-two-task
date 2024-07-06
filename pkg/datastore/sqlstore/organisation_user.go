@@ -77,7 +77,7 @@ func (s *sqlstore) FetchUserOrganisations(ctx context.Context, userID string) ([
 	for rows.Next() {
 		var org *models.Organisation
 
-		err = rows.StructScan(&org)
+		err = rows.StructScan(org)
 		if err != nil {
 			return nil, err
 		}

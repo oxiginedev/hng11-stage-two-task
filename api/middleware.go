@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -39,23 +38,19 @@ func (a *API) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 			return err
 		}
 
-		_, err = a.database.FetchUserByID(c.Request().Context(), vt.UserID)
+		user, err := a.database.FetchUserByID(c.Request().Context(), vt.UserID)
 		if err != nil {
 			return newAPIError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 		}
 
-		// authCtx := context.WithValue(c.Request().Context(), AuthUserCtx, user)
+		c.Set(string(AuthUserCtx), user)
 
 		return next(c)
 	}
 }
 
-func setAuthUserInContext(ctx context.Context, user *models.User) context.Context {
-	return context.WithValue(ctx, AuthUserCtx, user)
-}
-
-func GetAuthUserFromContext(ctx context.Context) *models.User {
-	return ctx.Value(AuthUserCtx).(*models.User)
+func GetAuthUserFromContext(c echo.Context) *models.User {
+	return c.Get(string(AuthUserCtx)).(*models.User)
 }
 
 func CustomHTTPErrorHandler(err error, c echo.Context) {

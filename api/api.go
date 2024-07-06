@@ -19,9 +19,10 @@ type (
 	}
 
 	APIError struct {
-		Status  string `json:"status"`
-		Message string `json:"message"`
-		Code    int    `json:"statusCode"`
+		Status  string      `json:"status,omitempty"`
+		Message string      `json:"message,omitempty"`
+		Code    int         `json:"statusCode,omitempty"`
+		Errors  interface{} `json:"errors,omitempty"`
 	}
 
 	APIValidator struct {
@@ -32,9 +33,6 @@ type (
 func (av *APIValidator) Validate(i interface{}) error {
 	err := av.validator.Struct(i)
 	if err != nil {
-		if ve, ok := err.(validator.ValidationErrors); ok {
-			return echo.NewHTTPError(http.StatusUnprocessableEntity, ve.Error())
-		}
 		return err
 	}
 	return nil

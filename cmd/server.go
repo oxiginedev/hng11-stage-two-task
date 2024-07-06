@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +17,15 @@ import (
 )
 
 func Start() error {
-	cfg := config.LoadConfig()
+	var envFile string
+
+	flag.StringVar(&envFile, "env", ".env", "Path to .env file")
+	flag.Parse()
+
+	cfg, err := config.Load(envFile)
+	if err != nil {
+		return err
+	}
 
 	// initialize database
 	db, err := sqlstore.New(cfg.DB.Driver, cfg.DB.DSN)

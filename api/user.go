@@ -8,7 +8,7 @@ import (
 )
 
 func (a *API) HandleGetUser(c echo.Context) error {
-	user := GetAuthUserFromContext(c.Request().Context())
+	user := GetAuthUserFromContext(c)
 
 	data := types.M{
 		"status":  "success",

@@ -13,7 +13,7 @@ import (
 )
 
 func (a *API) HandleGetOrganisations(c echo.Context) error {
-	user := GetAuthUserFromContext(c.Request().Context())
+	user := GetAuthUserFromContext(c)
 
 	orgs, err := a.database.FetchUserOrganisations(c.Request().Context(), user.ID)
 	if err != nil {
@@ -32,7 +32,7 @@ func (a *API) HandleGetOrganisations(c echo.Context) error {
 }
 
 func (a *API) HandleGetOrganisation(c echo.Context) error {
-	user := GetAuthUserFromContext(c.Request().Context())
+	user := GetAuthUserFromContext(c)
 	orgID := c.Param("orgId")
 
 	_, err := a.database.FetchOrganisationUserByUserID(
@@ -73,7 +73,7 @@ type CreateOrgPayload struct {
 func (a *API) HandleCreateOrganisation(c echo.Context) error {
 	var p CreateOrgPayload
 
-	user := GetAuthUserFromContext(c.Request().Context())
+	user := GetAuthUserFromContext(c)
 
 	err := c.Bind(&p)
 	if err != nil {

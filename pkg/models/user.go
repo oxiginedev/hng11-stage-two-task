@@ -8,14 +8,14 @@ import (
 )
 
 type User struct {
-	ID        string    `db:"id"`
-	FirstName string    `db:"first_name"`
-	LastName  string    `db:"last_name"`
-	Email     string    `db:"email"`
-	Phone     string    `db:"phone"`
-	Password  string    `db:"password"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        string    `db:"id" json:"userId"`
+	FirstName string    `db:"first_name" json:"firstName"`
+	LastName  string    `db:"last_name" json:"lastName"`
+	Email     string    `db:"email" json:"email"`
+	Phone     string    `db:"phone" json:"phone"`
+	Password  string    `db:"password" json:"-"`
+	CreatedAt time.Time `db:"created_at" json:"-"`
+	UpdatedAt time.Time `db:"updated_at" json:"-"`
 }
 
 func (u *User) SetPassword(password string) error {

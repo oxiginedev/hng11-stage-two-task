@@ -51,7 +51,7 @@ func (s *sqlstore) AutoMigrate() error {
 		Root:       "migrations",
 	}
 
-	migrate.SetSchema("migrations")
+	migrate.SetTable("migrations")
 
 	n, err := migrate.Exec(s.DB.DB, s.Driver, migrations, migrate.Up)
 	if err != nil {

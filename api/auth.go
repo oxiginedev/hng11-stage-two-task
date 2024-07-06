@@ -3,9 +3,11 @@ package api
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/oklog/ulid/v2"
 	"github.com/oxiginedev/hng11-stage-two-task/pkg/datastore"
@@ -32,6 +34,12 @@ func (a *API) HandleRegister(c echo.Context) error {
 	}
 
 	if err := c.Validate(p); err != nil {
+		if ve, ok := err.(validator.ValidationErrors); ok {
+			log.Print(ve)
+			return &APIError{
+				Errors: ve,
+			}
+		}
 		return err
 	}
 
@@ -52,7 +60,7 @@ func (a *API) HandleRegister(c echo.Context) error {
 	err = a.database.CreateUser(c.Request().Context(), user)
 	if err != nil {
 		if errors.Is(err, datastore.ErrDuplicate) {
-			return errors.New("account with phone or email exists")
+			return newAPIError(http.StatusUnprocessableEntity, "Account with email or phone exists")
 		}
 		return err
 	}
